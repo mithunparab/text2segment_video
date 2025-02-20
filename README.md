@@ -21,7 +21,7 @@ Before running the script, ensure that all dependencies are installed. You can i
 pip install -r requirements.txt
 ```
 
-For checkpoints:
+For downloading model checkpoints, run the following commands:
 
 ```bash
 cd checkpoints
@@ -29,14 +29,15 @@ cd checkpoints
 cd ..
 ```
 
-### Requirements
+## Requirements
 
 - Python 3.7+
 - OpenCV
-- PIL
-- Torch
+- Pillow (PIL)
+- PyTorch
 - tqdm
-and
+
+Additionally, install the following packages:
 
 ```bash
 pip install -q einops spaces timm transformers samv2 gradio supervision opencv-python
@@ -44,7 +45,9 @@ pip install -q einops spaces timm transformers samv2 gradio supervision opencv-p
 
 ## Usage
 
-The script can be executed from the command line with arguments to specify the paths of the input video, output video, and mask video, along with the text input for processing.
+The video processing can be executed from the command line with various arguments to specify the input video, output video, mask video, text input, and processing options.
+
+### Basic Command
 
 ```bash
 python main.py --input_video_path <path_to_input_video> --output_video_path <path_to_output_video> --mask_video_path <path_to_mask_video> --text_input "your text here"
@@ -52,45 +55,51 @@ python main.py --input_video_path <path_to_input_video> --output_video_path <pat
 
 ### Parameters
 
-- `--input_video_path`: Path to the source video file.
-- `--output_video_path`: Path to save the processed video file.
-- `--mask_video_path`: Path to save the mask video file that highlights detected objects.
-- `--text_input`: Textual description of the object or activity to detect and segment in the video.
-
-The `video_flow.py` script processes videos using RAFT-based optical flow for foreground extraction. It can be executed from the command line with arguments to specify the paths of the input and output video files, the processing mode, and optional text input for detection.
-
-### Arguments
-
 - `--input_video_path`  
-  **Required.** Path to the input video file.  
-  Example: `--input_video_path ./input_video.mp4`
+  **Required.** Path to the source video file.
 
 - `--output_video_path`  
-  **Required.** Path to save the output video file.  
-  Example: `--output_video_path ./output_video.mp4`
+  **Required.** Path to save the processed output video.
 
-- `--mode`  
-  **Required.** Processing mode to specify the type of operation:
-  - `OPEN_VOCABULARY_DETECTION`: Detects objects based on text input.
-  - `CAPTION_GROUNDING_MASKS`: Processes masks for grounding captions.  
-  Example: `--mode OPEN_VOCABULARY_DETECTION`
+- `--mask_video_path`  
+  **Required.** Path to save the mask video that highlights detected objects.
 
 - `--text_input`  
-  **Optional (Required for `OPEN_VOCABULARY_DETECTION` mode).** Text input for detecting specific objects in the video.  
-  Example: `--text_input "person walking"`
+  **Required.** Textual description of the object or activity to detect and segment in the video.
 
-### Notes
+- `--fps`  
+  Frames per second for the output video. Default is 20.
 
-1. When using `OPEN_VOCABULARY_DETECTION` mode, the `--text_input` argument is required.  
-2. Ensure RAFT is properly set up in your environment for accurate foreground extraction [Kaggle Notebook](https://www.kaggle.com/code/mithunparab/optical-flow-raft-video-summarization).
+- `--history`  
+  Background subtraction history length. Default is 500.
 
-### Full Example
+- `--var_threshold`  
+  Background subtraction threshold. Default is 16.
+
+- `--detect_shadows`  
+  Enable shadow detection in background subtraction. Default is True.
+
+- `--use_flow`  
+  Toggle to use RAFT-based optical flow instead of background subtraction. Default is False.
+
+- `--raft_path`  
+  Path to the RAFT directory (required if `--use_flow` is enabled). Default is `/kaggle/input/raft-pytorch`.
+
+### Example Command (Using Background Subtraction)
 
 ```bash
-python video_flow.py --input_video_path <path_to_input_video> --output_video_path <path_to_output_video> --mask_video_path <path_to_mask_video> --text_input "your text here"
+python main.py --input_video_path ./input_video.mp4 --output_video_path ./output_video.mp4 --mask_video_path ./mask_video.mp4 --text_input "person carrying a weapon"
 ```
 
-### WebUI
+### Example Command (Using RAFT Optical Flow)
+
+```bash
+python main.py --input_video_path ./input_video.mp4 --output_video_path ./output_video.mp4 --mask_video_path ./mask_video.mp4 --text_input "person carrying a weapon" --use_flow --raft_path /path/to/raft
+```
+
+## Web Interface
+
+A web-based user interface is available using Streamlit. To launch the web interface, run:
 
 ```bash
 streamlit run app.py
@@ -98,9 +107,22 @@ streamlit run app.py
 
 ## Features
 
-- **Motion Detection**: Detect significant motions in the video to focus processing on relevant segments.
-- **Object and Action Detection**: Utilize state-of-the-art models (Florence2 and SAM2) to detect and segment objects or actions specified by the user.
-- **Video and Mask Output**: Generate an annotated video and a corresponding mask video showing the detected segments.
+- **Motion Detection:**  
+  Detect significant motion in the video to focus processing on relevant segments.
+
+- **Object and Action Detection:**  
+  Utilize state-of-the-art models (Florence2 and SAM2) to detect and segment objects or actions based on the provided text input.
+
+- **Dual Processing Modes:**  
+  Choose between traditional background subtraction and RAFT-based optical flow for foreground extraction.
+
+- **Output Generation:**  
+  Generate an annotated video along with a corresponding mask video showing the detected segments.
+
+## Notes
+
+1. When using optical flow, ensure that the RAFT model and its weights are correctly set up in your environment.
+2. The web interface (app.py) allows you to upload videos and toggle between processing modes, providing a convenient user experience.
 
 ## To Do
 
